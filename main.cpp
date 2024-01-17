@@ -275,7 +275,7 @@ void display() {
     // Check if the user has finished selecting points for the original polygon
     if (performClippingMode && userPolygon.size() >= 3 && userPolygon.size() <= maxPoints) {
         // Apply Cyrus-Beck algorithm to each line segment of the polygon
-        std::vector<Edge> edges = buildEdges(std::vector<Point>(std::begin(clippingWindow), std::end(clippingWindow)));
+        std::vector<Edge> edges = buildEdges(std::vector<Point>(std::begin(ClippingWindowPolygon), std::end(ClippingWindowPolygon)));
         std::vector<Point> clippedPoints; // To store the endpoints of clipped segments
 
         for (size_t i = 0; i < userPolygon.size(); ++i) {
