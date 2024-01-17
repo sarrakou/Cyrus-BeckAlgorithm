@@ -21,14 +21,15 @@ struct Edge {
 };
 
 std::vector<Point> userPolygon; // To store user-defined polygon vertices
+std::vector<Point> ClippingWindowPolygon; // To store user-defined ClippingWindowPolygon vertices
 
 // Define the clipping window as a rectangle
-Point clippingWindow[4] = {
+/* Point clippingWindow[4] = {
     {100, 100}, // Bottom left
     {100, 300}, // Top left
     {300, 300}, // Top right
     {300, 100}  // Bottom right
-};
+}; */
 
 // Limit for the number of points
 const int maxPoints = 5;
@@ -97,19 +98,6 @@ Line clipLine(const Line& line, const std::vector<Edge>& edges) {
     return clippedLine;
 }
 
-void mouse(int button, int state, int x, int y) {
-    if (button == GLUT_LEFT_BUTTON && state == GLUT_DOWN) {
-        if (userPolygon.size() < maxPoints) {
-            // Convert screen coordinates to world coordinates if necessary
-            Point newPoint = {static_cast<float>(x), static_cast<float>(windowHeight - y)};
-            userPolygon.push_back(newPoint);
-
-            // Redraw the window to show the updated polygon
-            glutPostRedisplay();
-        }
-    }
-}
-
 // Function to draw a line
 void drawLine(Point p1, Point p2) {
     glBegin(GL_LINES);
@@ -119,12 +107,12 @@ void drawLine(Point p1, Point p2) {
 }
 
 // Function to draw the clipping window
-void drawClippingWindow() {
+/* void drawClippingWindow() {
     glColor3f(1.0, 0.0, 0.0); // Red color for the clipping window
     for (int i = 0; i < 4; ++i) {
         drawLine(clippingWindow[i], clippingWindow[(i + 1) % 4]);
     }
-}
+} */
 
 // Menu action identifiers
 enum MenuActions {
@@ -197,6 +185,7 @@ void menu(int item) {
             drawPolygonMode = false;
             drawWindowMode = true;
             performClippingMode = false;
+            ClippingWindowPolygon.clear();
             break;
         case PERFORM_CLIPPING:
             if (userPolygon.size() >= 3) {
@@ -207,6 +196,7 @@ void menu(int item) {
             drawPolygonMode = false;
             drawWindowMode = false;
             performClippingMode = false;
+            ClippingWindowPolygon.clear();
             userPolygon.clear();
             break;
     }
@@ -226,17 +216,46 @@ void createMenu() {
 }
 
 
+void mouse(int button, int state, int x, int y) {
+    if (button == GLUT_LEFT_BUTTON && state == GLUT_DOWN) {
+        if (drawWindowMode)
+        {
+            if (ClippingWindowPolygon.size() < 4) {
+                // Convert screen coordinates to world coordinates if necessary
+                Point newPoint = {static_cast<float>(x), static_cast<float>(windowHeight - y)};
+                ClippingWindowPolygon.push_back(newPoint);
+
+                // Redraw the window to show the updated clipping window
+                glutPostRedisplay();
+            }
+        } else if (drawPolygonMode)
+        {
+             if (userPolygon.size() < maxPoints) {
+            // Convert screen coordinates to world coordinates if necessary
+            Point newPoint = {static_cast<float>(x), static_cast<float>(windowHeight - y)};
+            userPolygon.push_back(newPoint);
+
+            // Redraw the window to show the updated polygon
+            glutPostRedisplay();
+            }
+        }
+    }
+}
+
 void display() {
     glClear(GL_COLOR_BUFFER_BIT);
 
     if (drawWindowMode || performClippingMode || drawPolygonMode) {
          // Draw the clipping window in red
-        // glColor3f(1.0, 0.0, 0.0); // Red color for the clipping window
-        glColor3fv(polygonColor); // Set color for the clipping window
+        glColor3f(1.0, 0.0, 0.0); // Red color for the clipping window
+        // glColor3fv(polygonColor); // Set color for the clipping window
 
         glBegin(GL_LINE_LOOP);
-        for (int i = 0; i < 4; ++i) {
+       /* for (int i = 0; i < 4; ++i) {
             glVertex2f(clippingWindow[i].x, clippingWindow[i].y);
+        } */
+        for (const auto& point : ClippingWindowPolygon) {
+            glVertex2f(point.x, point.y);
         }
         glEnd();
     }
