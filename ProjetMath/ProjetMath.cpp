@@ -22,16 +22,18 @@ struct Edge {
 };
 
 std::vector<Point> userPolygon; // To store user-defined polygon vertices
+std::vector<Point> clippingWindow; // To store user-defined ClippingWindowPolygon vertices
+
 // Color for the user-defined polygon and clipping window
 float polygonColor[3] = { 0.0, 0.0, 1.0 }; // Default to blue
 
 // Define the clipping window as a rectangle
-Point clippingWindow[4] = {
+/* Point clippingWindow[4] = {
     {100, 100}, // Bottom left
     {100, 300}, // Top left
     {300, 300}, // Top right
     {300, 100}  // Bottom right
-};
+}; */
 
 // Limit for the number of points
 const int maxPoints = 5;
@@ -207,21 +209,6 @@ void performSutherlandHodgmanClipping(const std::vector<Point>& polyPoints, cons
 
 }
 
-
-
-void mouse(int button, int state, int x, int y) {
-    if (button == GLUT_LEFT_BUTTON && state == GLUT_DOWN) {
-        if (userPolygon.size() < maxPoints) {
-            // Convert screen coordinates to world coordinates if necessary
-            Point newPoint = { static_cast<float>(x), static_cast<float>(windowHeight - y) };
-            userPolygon.push_back(newPoint);
-
-            // Redraw the window to show the updated polygon
-            glutPostRedisplay();
-        }
-    }
-}
-
 // Function to draw a line
 void drawLine(Point p1, Point p2) {
     glBegin(GL_LINES);
@@ -311,6 +298,7 @@ void menu(int item) {
         drawPolygonMode = false;
         drawWindowMode = true;
         performClippingMode = false;
+        clippingWindow.clear();
         break;
     case PERFORM_CLIPPING:
         if (userPolygon.size() >= 3) {
@@ -329,6 +317,7 @@ void menu(int item) {
         drawWindowMode = false;
         performClippingMode = false;
         userPolygon.clear();
+        clippingWindow.clear();
         break;
     }
     glutPostRedisplay();
@@ -352,18 +341,47 @@ void createMenu() {
 
 
 
+void mouse(int button, int state, int x, int y) {
+    if (button == GLUT_LEFT_BUTTON && state == GLUT_DOWN) {
+        if (drawWindowMode)
+        {
+            if (clippingWindow.size() < 4) {
+                // Convert screen coordinates to world coordinates if necessary
+                Point newPoint = {static_cast<float>(x), static_cast<float>(windowHeight - y)};
+                clippingWindow.push_back(newPoint);
+
+                // Redraw the window to show the updated clipping window
+                glutPostRedisplay();
+            }
+        } else if (drawPolygonMode)
+        {
+             if (userPolygon.size() < maxPoints) {
+            // Convert screen coordinates to world coordinates if necessary
+            Point newPoint = {static_cast<float>(x), static_cast<float>(windowHeight - y)};
+            userPolygon.push_back(newPoint);
+
+            // Redraw the window to show the updated polygon
+            glutPostRedisplay();
+            }
+        }
+    }
+}
+
 
 void display() {
     glClear(GL_COLOR_BUFFER_BIT);
 
     if (drawWindowMode || performClippingMode || drawPolygonMode) {
         // Draw the clipping window in red
-       // glColor3f(1.0, 0.0, 0.0); // Red color for the clipping window
-        glColor3fv(polygonColor); // Set color for the clipping window
+        glColor3f(1.0, 0.0, 0.0); // Red color for the clipping window
+        // glColor3fv(polygonColor); // Set color for the clipping window
 
         glBegin(GL_LINE_LOOP);
-        for (int i = 0; i < 4; ++i) {
+        /* for (int i = 0; i < 4; ++i) {
             glVertex2f(clippingWindow[i].x, clippingWindow[i].y);
+        } */
+        for (const auto& point : clippingWindow) {
+            glVertex2f(point.x, point.y);
         }
         glEnd();
     }
@@ -422,7 +440,7 @@ int main(int argc, char** argv) {
     glutInitDisplayMode(GLUT_SINGLE | GLUT_RGB);
     glutInitWindowSize(400, 400);
     glutInitWindowPosition(100, 100);
-    glutCreateWindow("Clipping Window");
+    glutCreateWindow("Math project - Adriana SALAS / Florentin ERAUD / Sarra KOUSSAIER");
 
     glClearColor(1.0, 1.0, 1.0, 0.0); // Set background to white
     gluOrtho2D(0, 400, 0, 400); // Set the coordinate system
